@@ -28,7 +28,7 @@ tbody tr{background:rgba(3,12,20,.85)}tbody tr:nth-child(even){background:rgba(7
 td{padding:8px 2px;border-bottom:1px solid #10304a;text-align:center;vertical-align:middle}tbody tr:last-child td{border-bottom:0}
 th:nth-child(1){width:45px}th:nth-child(2){width:85px}th:nth-child(3){width:85px}th:nth-child(4){width:95px}th:nth-child(5){width:125px}th:nth-child(6){width:80px}th:nth-child(7){width:105px}
 .carbadge{margin:auto;width:30px;height:30px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:950;border:1px solid #ffffff44;box-shadow:0 3px 10px #0008}
-.car-1{background:#121212;color:#fff}.car-2{background:#f3f3f3;color:#111}.car-3{background:#d91515;color:#fff}.car-4{background:#126bd4;color:#fff}.car-5{background:#f5d830;color:#111}.car-6{background:#2aa13d;color:#fff}.car-7{background:#ef6c12;color:#111}.car-8{background:#dd55af;color:#111}
+.car-1{background:#f3f3f3;color:#111}.car-2{background:#121212;color:#fff}.car-3{background:#d91515;color:#fff}.car-4{background:#126bd4;color:#fff}.car-5{background:#f5d830;color:#111}.car-6{background:#2aa13d;color:#fff}.car-7{background:#ef6c12;color:#111}.car-8{background:#dd55af;color:#111}
 input,select{width:100%;height:42px;border:1px solid #335f80;border-radius:10px;background:linear-gradient(180deg,#08111b,#050b12);color:#fff;text-align:center;font-size:15px;font-weight:750;outline:none;box-shadow:inset 0 0 0 1px #061524,0 2px 10px #0005}
 input::placeholder{color:#78899a;opacity:.72}input:focus,select:focus{border-color:#43c8ff;box-shadow:0 0 0 2px #43c8ff22,0 0 15px #0e8fdb33}
 select{
@@ -69,14 +69,49 @@ select{
   select{min-width:60px!important;padding:0 4px!important;font-size:13px!important}
 }
 
+
+.race-tabs{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:7px;
+  padding:12px;
+}
+.race-tab{
+  height:40px;
+  border:1px solid #275d86;
+  border-radius:10px;
+  background:linear-gradient(180deg,#0b1d2e,#07131f);
+  color:#b9cbe0;
+  font-weight:900;
+  font-size:13px;
+  box-shadow:inset 0 1px 0 #ffffff0d;
+}
+.race-tab.active{
+  color:#06111b;
+  border-color:#65d8ff;
+  background:linear-gradient(180deg,#7ce5ff,#45bdf0);
+  box-shadow:0 0 16px #39bff755,inset 0 1px 0 #ffffff88;
+}
+.race-caption{
+  padding:13px 14px 0;
+  font-size:11px;
+  color:#8ea5bb;
+}
+
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="gauge" aria-hidden="true"></div><div><div class="logo-title">AUTO RACE TIME</div><div class="logo-sub">RACE TIME ANALYZER / DATA MODE</div></div></div></header>
 <main>
+
+  <section class="panel">
+    <div class="race-caption">レース切替（入力内容はレースごとに自動保存）</div>
+    <div class="race-tabs" id="raceTabs"></div>
+  </section>
+
 <section class="panel rules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。</section>
 <section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ<br>(m)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
-<section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ リセット</button></section>
+<section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ このレースをリセット</button></section>
 <section class="panel rank-card"><div class="rank-title"><span class="trophy">🏆</span>ハンデ込みランキング<span class="rank-note">表示基準：中央値</span></div><div id="rankHeader" class="rank-head" style="display:none"><span>順位</span><span>車番</span><span>ハンデ込み</span><span>差</span></div><div id="ranking" class="empty">入力すると表示されます。</div></section>
 </main>
 <script>
@@ -88,7 +123,13 @@ function getH(i){const x=Number(document.getElementById('h'+i).value);return Num
 function fmt3(x){return x.toFixed(3)}
 function update(){const rows=[];for(let i=1;i<=8;i++){const t=normalizeTime(document.getElementById('t'+i)),d=normalizeDev(document.getElementById('d'+i)),h=getH(i);if(t===null||d===null){document.getElementById('up'+i).textContent='---';document.getElementById('base'+i).textContent='---';document.getElementById('hand'+i).textContent='---';continue;}const up=t+d,lo=up-.010,hi=up+.010,handicap=h*.001,hlo=lo+handicap,hhi=hi+handicap,mid=up+handicap;document.getElementById('up'+i).textContent=fmt3(up);document.getElementById('base'+i).textContent=fmt3(lo)+'〜'+fmt3(hi);document.getElementById('hand'+i).textContent=fmt3(hlo)+'〜'+fmt3(hhi);rows.push({i,v:mid});}rows.sort((a,b)=>a.v-b.v);const rank=document.getElementById('ranking'),head=document.getElementById('rankHeader');if(!rows.length){head.style.display='none';rank.className='empty';rank.textContent='入力すると表示されます。';saveState();return;}const best=rows[0].v;head.style.display='grid';rank.className='';rank.innerHTML=rows.map((x,k)=>{const diff=x.v-best,cls=k===0?'top1':k===1?'top2':k===2?'top3':'',icon=k===0?'🏆 ':k===1?'🥈 ':k===2?'🥉 ':'';return `<div class="rankrow ${cls}"><span class="rn">${icon}${k+1}位</span><span class="rc">${x.i}号車</span><span class="rv">${fmt3(x.v)}</span><span class="diff">${diff===0?'0.000':'+'+fmt3(diff)}</span></div>`}).join('');saveState();}
 
-const STORAGE_KEY='autoRaceTime_v1';
+
+let currentRace = 1;
+const STORAGE_PREFIX='autoRaceTime_race_';
+
+function storageKey(){
+  return STORAGE_PREFIX + currentRace;
+}
 
 function saveState(){
   const state={};
@@ -97,13 +138,22 @@ function saveState(){
     state['d'+i]=document.getElementById('d'+i).value;
     state['h'+i]=document.getElementById('h'+i).value;
   }
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}
+  try{localStorage.setItem(storageKey(),JSON.stringify(state));}catch(e){}
+}
+
+function clearFormOnly(){
+  for(let i=1;i<=8;i++){
+    document.getElementById('t'+i).value='';
+    document.getElementById('d'+i).value='';
+    document.getElementById('h'+i).value='0';
+  }
 }
 
 function loadState(){
+  clearFormOnly();
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw)return;
+    const raw=localStorage.getItem(storageKey());
+    if(!raw) return;
     const state=JSON.parse(raw);
     for(let i=1;i<=8;i++){
       if(state['t'+i]!==undefined)document.getElementById('t'+i).value=state['t'+i];
@@ -113,9 +163,32 @@ function loadState(){
   }catch(e){}
 }
 
+function renderRaceTabs(){
+  const tabs=document.getElementById('raceTabs');
+  tabs.innerHTML='';
+  for(let r=1;r<=12;r++){
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='race-tab'+(r===currentRace?' active':'');
+    b.textContent=r+'R';
+    b.addEventListener('click',()=>switchRace(r));
+    tabs.appendChild(b);
+  }
+}
+
+function switchRace(r){
+  if(r===currentRace) return;
+  saveState();
+  currentRace=r;
+  renderRaceTabs();
+  loadState();
+  update();
+}
+
+
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('blur',update);el.addEventListener('change',update);el.addEventListener('input',()=>{if(el.id.startsWith('t')&&el.value.replace(/\D/g,'').length>=3)update();if(el.id.startsWith('d')&&el.value.replace(/\D/g,'').length>=4)update();});});
 document.querySelectorAll('select').forEach(el=>el.addEventListener('change',update));
-function resetAll(){document.querySelectorAll('input').forEach(el=>el.value='');document.querySelectorAll('select').forEach(el=>el.value='0');try{localStorage.removeItem(STORAGE_KEY);}catch(e){}update()}loadState();update();
+function resetAll(){clearFormOnly();try{localStorage.removeItem(storageKey());}catch(e){}update()}renderRaceTabs();loadState();update();
 </script>
 </body>
 </html>
