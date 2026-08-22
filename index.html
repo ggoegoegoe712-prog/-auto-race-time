@@ -98,6 +98,43 @@ select{
   color:#8ea5bb;
 }
 
+
+.player-panel{padding:0}
+.player-summary{
+  width:100%;height:46px;border:0;border-radius:0;
+  background:linear-gradient(180deg,#0a2237,#071827);
+  color:#eaf6ff;font-size:14px;font-weight:900;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px;cursor:pointer;
+}
+.player-summary .hint{font-size:10px;color:#82a7c3;font-weight:700}
+.player-grid{display:none;padding:8px 10px 10px}
+.player-grid.open{display:block}
+.player-row{
+  display:grid;grid-template-columns:34px minmax(92px,.8fr) minmax(140px,1.6fr) 82px;
+  gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #10304a;
+}
+.player-row:last-child{border-bottom:0}
+.player-no{
+  width:28px;height:28px;border-radius:4px;margin:auto;
+  display:flex;align-items:center;justify-content:center;font-weight:950;
+  border:1px solid #ffffff44;
+}
+.player-name,.player-note{
+  height:36px!important;font-size:13px!important;text-align:left!important;padding:0 8px!important;
+}
+.official-btn{
+  height:36px!important;border:1px solid #2c87bc!important;border-radius:8px!important;
+  background:linear-gradient(180deg,#0d5d91,#083b61)!important;
+  color:#eaf8ff!important;font-size:11px!important;font-weight:900!important;
+  letter-spacing:0!important;padding:0 4px!important;
+}
+@media(max-width:430px){
+  .player-row{grid-template-columns:30px 92px minmax(132px,1fr) 72px;gap:4px}
+  .player-name,.player-note{font-size:12px!important;padding:0 6px!important}
+  .official-btn{font-size:10px!important}
+}
+
 </style>
 </head>
 <body>
@@ -111,12 +148,46 @@ select{
 
 <section class="panel rules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。</section>
 <section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ<br>(m)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
+
+<section class="panel player-panel">
+  <button class="player-summary" type="button" onclick="togglePlayerPanel()">
+    <span>選手名・自分用メモ</span>
+    <span class="hint" id="playerPanelHint">タップして開く ▼</span>
+  </button>
+  <div class="player-grid" id="playerGrid"></div>
+</section>
+
 <section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ このレースをリセット</button></section>
 <section class="panel rank-card"><div class="rank-title"><span class="trophy">🏆</span>ハンデ込みランキング<span class="rank-note">表示基準：中央値</span></div><div id="rankHeader" class="rank-head" style="display:none"><span>順位</span><span>車番</span><span>ハンデ込み</span><span>差</span></div><div id="ranking" class="empty">入力すると表示されます。</div></section>
 </main>
 <script>
 const body=document.getElementById('body');
 for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="carbadge car-${i}">${i}</div></td><td><input id="t${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="3.30" aria-label="${i}号車 試走"></td><td><input id="d${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="0.050" aria-label="${i}号車 偏差"></td><td class="up" id="up${i}">---</td><td class="range" id="base${i}">---</td><td><select id="h${i}" aria-label="${i}号車 ハンデ">${Array.from({length:11},(_,n)=>`<option value="${n*10}">${n*10}</option>`).join('')}</select></td><td class="hand-range" id="hand${i}">---</td></tr>`);}
+
+const playerGrid=document.getElementById('playerGrid');
+for(let i=1;i<=8;i++){
+  playerGrid.insertAdjacentHTML('beforeend',`
+    <div class="player-row">
+      <div class="player-no car-${i}">${i}</div>
+      <input class="player-name" id="p${i}" type="text" autocomplete="off" placeholder="選手名" aria-label="${i}号車 選手名">
+      <input class="player-note" id="m${i}" type="text" autocomplete="off" placeholder="例：ST◎ 今節↑ 湿○" aria-label="${i}号車 自分用メモ">
+      <button class="official-btn" type="button" onclick="openOfficialPlayer(${i})">公式成績</button>
+    </div>`);
+}
+function togglePlayerPanel(){
+  const grid=document.getElementById('playerGrid');
+  const hint=document.getElementById('playerPanelHint');
+  const open=grid.classList.toggle('open');
+  hint.textContent=open?'閉じる ▲':'タップして開く ▼';
+}
+function openOfficialPlayer(i){
+  const name=document.getElementById('p'+i).value.trim();
+  if(name && navigator.clipboard){
+    navigator.clipboard.writeText(name).catch(()=>{});
+  }
+  window.open('https://autorace.jp/player/','_blank','noopener');
+}
+
 function normalizeTime(el){const raw=el.value.trim();if(!raw)return null;if(raw.includes('.')){const x=Number(raw);return Number.isFinite(x)?x:null;}const digits=raw.replace(/\D/g,'');if(digits.length===3){el.value=digits[0]+'.'+digits.slice(1);}else if(digits.length===4){el.value=digits[0]+'.'+digits.slice(1,3);}const x=Number(el.value);return Number.isFinite(x)?x:null;}
 function normalizeDev(el){const raw=el.value.trim();if(!raw)return null;if(raw.includes('.')){const x=Number(raw);return Number.isFinite(x)?x:null;}const digits=raw.replace(/\D/g,'');if(digits.length===4){el.value='0.'+digits.slice(1);}else if(digits.length===3){el.value='0.'+digits.padStart(3,'0');}const x=Number(el.value);return Number.isFinite(x)?x:null;}
 function getH(i){const x=Number(document.getElementById('h'+i).value);return Number.isFinite(x)?x:0}
@@ -137,6 +208,8 @@ function saveState(){
     state['t'+i]=document.getElementById('t'+i).value;
     state['d'+i]=document.getElementById('d'+i).value;
     state['h'+i]=document.getElementById('h'+i).value;
+    state['p'+i]=document.getElementById('p'+i).value;
+    state['m'+i]=document.getElementById('m'+i).value;
   }
   try{localStorage.setItem(storageKey(),JSON.stringify(state));}catch(e){}
 }
@@ -146,6 +219,8 @@ function clearFormOnly(){
     document.getElementById('t'+i).value='';
     document.getElementById('d'+i).value='';
     document.getElementById('h'+i).value='0';
+    document.getElementById('p'+i).value='';
+    document.getElementById('m'+i).value='';
   }
 }
 
@@ -159,6 +234,8 @@ function loadState(){
       if(state['t'+i]!==undefined)document.getElementById('t'+i).value=state['t'+i];
       if(state['d'+i]!==undefined)document.getElementById('d'+i).value=state['d'+i];
       if(state['h'+i]!==undefined)document.getElementById('h'+i).value=state['h'+i];
+      if(state['p'+i]!==undefined)document.getElementById('p'+i).value=state['p'+i];
+      if(state['m'+i]!==undefined)document.getElementById('m'+i).value=state['m'+i];
     }
   }catch(e){}
 }
@@ -188,6 +265,12 @@ function switchRace(r){
 
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('blur',update);el.addEventListener('change',update);el.addEventListener('input',()=>{if(el.id.startsWith('t')&&el.value.replace(/\D/g,'').length>=3)update();if(el.id.startsWith('d')&&el.value.replace(/\D/g,'').length>=4)update();});});
 document.querySelectorAll('select').forEach(el=>el.addEventListener('change',update));
+
+document.querySelectorAll('.player-name,.player-note').forEach(el=>{
+  el.addEventListener('input',saveState);
+  el.addEventListener('change',saveState);
+});
+
 function resetAll(){clearFormOnly();try{localStorage.removeItem(storageKey());}catch(e){}update()}renderRaceTabs();loadState();update();
 </script>
 </body>
