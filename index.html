@@ -135,6 +135,44 @@ select{
   .official-btn{font-size:10px!important}
 }
 
+
+/* compact mode */
+header{padding:calc(18px + env(safe-area-inset-top)) 14px 14px!important}
+.gauge{width:42px!important;height:42px!important}
+.gauge:before{left:20px!important;top:7px!important;height:18px!important}
+.gauge:after{left:16px!important;top:17px!important}
+.logo-title{font-size:25px!important}
+.logo-sub{margin-top:5px!important;font-size:7px!important}
+main{padding-top:9px!important}
+.panel{margin-bottom:9px!important;border-radius:13px!important}
+.rules{padding:9px 12px!important;font-size:10px!important;line-height:1.5!important}
+.race-caption{padding-top:9px!important}
+.race-tabs{gap:5px!important;padding:8px!important}
+.race-tab{height:34px!important;font-size:12px!important}
+thead th{padding:7px 2px!important}
+td{padding:6px 2px!important}
+input,select{height:36px!important}
+.actions{padding:9px!important;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.actions button{height:39px!important;margin:0!important;font-size:12px!important}
+.rank-card{padding:11px 12px 5px!important}
+.rank-title{font-size:16px!important}
+.rankrow{padding:9px 3px!important}
+.rv{font-size:17px!important}
+
+/* compact player picker */
+.player-summary{height:38px!important;font-size:12px!important;padding:0 11px!important}
+.player-grid{padding:6px 7px 7px!important}
+.player-row{
+  grid-template-columns:30px 76px minmax(145px,1fr) 64px!important;
+  gap:4px!important;padding:4px 0!important
+}
+.player-row select{height:34px!important;font-size:11px!important;padding:0 4px!important}
+.player-row .official-btn{height:34px!important;font-size:9px!important}
+@media(max-width:430px){
+  .player-row{min-width:360px!important}
+  .player-grid{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+}
+
 </style>
 </head>
 <body>
@@ -151,10 +189,10 @@ select{
 
 <section class="panel player-panel">
   <button class="player-summary" type="button" onclick="togglePlayerPanel()">
-    <span>選手名・自分用メモ</span>
-    <span class="hint" id="playerPanelHint">タップして開く ▼</span>
+    <span>選手選択</span>
+    <span class="hint" id="playerPanelHint">所属→選手 ▼</span>
   </button>
-  <div class="player-grid" id="playerGrid"></div>
+  <div class="player-grid" id="playerGrid"></div><div style="padding:0 10px 8px;font-size:9px;color:#7890a8">選手マスター：現行データ確認済みの選手から選択。所属ごとに50音順表示。</div>
 </section>
 
 <section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ このレースをリセット</button></section>
@@ -169,19 +207,41 @@ for(let i=1;i<=8;i++){
   playerGrid.insertAdjacentHTML('beforeend',`
     <div class="player-row">
       <div class="player-no car-${i}">${i}</div>
-      <input class="player-name" id="p${i}" type="text" autocomplete="off" placeholder="選手名" aria-label="${i}号車 選手名">
-      <input class="player-note" id="m${i}" type="text" autocomplete="off" placeholder="例：ST◎ 今節↑ 湿○" aria-label="${i}号車 自分用メモ">
+      <select class="player-lg" id="lg${i}" aria-label="${i}号車 所属">
+        <option value="">所属</option>
+        <option>川口</option><option>伊勢崎</option><option>浜松</option><option>飯塚</option><option>山陽</option>
+      </select>
+      <select class="player-name" id="p${i}" aria-label="${i}号車 選手名"><option value="">選手</option></select>
       <button class="official-btn" type="button" onclick="openOfficialPlayer(${i})">公式成績</button>
     </div>`);
 }
+const PLAYER_MASTER={"川口": ["上和田 拓海", "中山 光", "中村 雅人", "五十嵐 一夫", "佐藤 励", "佐藤 摩弥", "加賀谷 建明", "吉田 幸司", "君和田 裕二", "大木 光", "山口 航太", "平田 雅崇", "押田 幸夫", "掛川 和人", "柴山 信行", "森 且行", "永井 大介", "泉田 修佑", "石井 大輔", "若井 友和", "菅原 すずの", "阿部 剛士", "黒川 京介"], "浜松": ["伊藤 信夫", "佐藤 貴也", "小林 悠樹", "岡谷 美由紀", "木村 直幸", "栗原 佳祐", "森下 輝", "渡辺 篤", "笠木 美孝", "落合 巧", "赤堀 翼", "遠藤 誠", "金子 大輔", "鈴木 一馬", "鈴木 圭一郎", "鈴木 宏和", "関口 隆広", "青島 正樹"], "飯塚": ["中尾 貴志", "丹村 司", "内山 雄介", "川口 裕司", "新村 嘉之", "水崎 正二", "浜野 翼", "滝下 隼平", "牧瀬 嘉葵", "田島 敏徳", "福岡 鷹", "竹谷 隆", "篠原 睦", "荒尾 聡", "藤川 幸宏", "長田 稚也", "高宗 良次", "高林 亮"], "伊勢崎": ["亀井 政和", "吉原 恭佑", "塚越 浩之", "岩田 行雄", "新井 日和", "早川 清太郎", "松本 康", "浅倉 樹良", "石川 哲也", "西原 智昭", "谷津 圭治", "鈴木 聡太", "青山 周平", "高橋 貢"], "山陽": ["三宅 真央", "且原 朋弥", "丹下 昂紀", "丹村 飛竜", "人見 剛志", "佐々木 啓", "前田 淳", "安東 久隆", "小栗 勝太", "山崎 進", "山本 翔", "岡松 忠", "岩崎 亮一", "日名子 幹正", "松尾 啓史", "松尾 彩", "永島 潤太郎", "池田 康範", "滝谷 圭", "田中 崇太", "矢野 正剛", "磯部 真樹", "稲原 良太郎", "竹中 一成", "藤本 悠仁", "角 翔太郎", "角南 一如"]};
+
+function fillPlayerSelect(i,selected=''){
+  const lg=document.getElementById('lg'+i).value;
+  const sel=document.getElementById('p'+i);
+  const list=(PLAYER_MASTER[lg]||[]).slice().sort((a,b)=>a.localeCompare(b,'ja'));
+  sel.innerHTML='<option value="">選手</option>'+list.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(selected && list.includes(selected)) sel.value=selected;
+}
+
+
+for(let i=1;i<=8;i++){
+  document.getElementById('lg'+i).addEventListener('change',()=>{
+    fillPlayerSelect(i);
+    saveState();
+  });
+  document.getElementById('p'+i).addEventListener('change',saveState);
+}
+
 function togglePlayerPanel(){
   const grid=document.getElementById('playerGrid');
   const hint=document.getElementById('playerPanelHint');
   const open=grid.classList.toggle('open');
-  hint.textContent=open?'閉じる ▲':'タップして開く ▼';
+  hint.textContent=open?'閉じる ▲':'所属→選手 ▼';
 }
 function openOfficialPlayer(i){
-  const name=document.getElementById('p'+i).value.trim();
+  const name=document.getElementById('p'+i).value;
   if(name && navigator.clipboard){
     navigator.clipboard.writeText(name).catch(()=>{});
   }
@@ -209,7 +269,7 @@ function saveState(){
     state['d'+i]=document.getElementById('d'+i).value;
     state['h'+i]=document.getElementById('h'+i).value;
     state['p'+i]=document.getElementById('p'+i).value;
-    state['m'+i]=document.getElementById('m'+i).value;
+    state['lg'+i]=document.getElementById('lg'+i).value;
   }
   try{localStorage.setItem(storageKey(),JSON.stringify(state));}catch(e){}
 }
@@ -220,7 +280,7 @@ function clearFormOnly(){
     document.getElementById('d'+i).value='';
     document.getElementById('h'+i).value='0';
     document.getElementById('p'+i).value='';
-    document.getElementById('m'+i).value='';
+    document.getElementById('lg'+i).value='';
   }
 }
 
@@ -234,8 +294,8 @@ function loadState(){
       if(state['t'+i]!==undefined)document.getElementById('t'+i).value=state['t'+i];
       if(state['d'+i]!==undefined)document.getElementById('d'+i).value=state['d'+i];
       if(state['h'+i]!==undefined)document.getElementById('h'+i).value=state['h'+i];
-      if(state['p'+i]!==undefined)document.getElementById('p'+i).value=state['p'+i];
-      if(state['m'+i]!==undefined)document.getElementById('m'+i).value=state['m'+i];
+      fillPlayerSelect(i,state['p'+i]||'');
+      if(state['lg'+i]!==undefined)document.getElementById('lg'+i).value=state['lg'+i];
     }
   }catch(e){}
 }
@@ -266,10 +326,7 @@ function switchRace(r){
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('blur',update);el.addEventListener('change',update);el.addEventListener('input',()=>{if(el.id.startsWith('t')&&el.value.replace(/\D/g,'').length>=3)update();if(el.id.startsWith('d')&&el.value.replace(/\D/g,'').length>=4)update();});});
 document.querySelectorAll('select').forEach(el=>el.addEventListener('change',update));
 
-document.querySelectorAll('.player-name,.player-note').forEach(el=>{
-  el.addEventListener('input',saveState);
-  el.addEventListener('change',saveState);
-});
+
 
 function resetAll(){clearFormOnly();try{localStorage.removeItem(storageKey());}catch(e){}update()}renderRaceTabs();loadState();update();
 </script>
