@@ -232,11 +232,57 @@ input,select{height:36px!important}
   .memo-strip,.memo-detail{padding-left:0;margin-left:34px}
 }
 
+
+.autoimport{padding:10px 11px}
+.autoimport-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:950}
+.autoimport-badge{font-size:9px;color:#ffd976;border:1px solid #665324;border-radius:999px;padding:3px 7px}
+.autoimport-grid{display:grid;grid-template-columns:1.25fr 1fr 64px;gap:6px;margin-top:8px}
+.autoimport input,.autoimport select{height:37px!important;font-size:12px!important}
+.autoimport-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
+.autoimport-actions button{height:38px!important;font-size:11px!important}
+.autoimport-primary{background:linear-gradient(180deg,#1685d7,#07528c)!important;border:1px solid #35b7ff!important;color:#fff!important}
+.autoimport-secondary{background:#0a1926!important;border:1px solid #315f80!important;color:#b8d9ee!important}
+.autoimport-status{margin-top:7px;font-size:10px;color:#91a8bc;line-height:1.45}
+.autoimport-status.ok{color:#8fe6b3}.autoimport-status.err{color:#ff9cae}
+.venue-pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.venue-pill{width:auto!important;height:29px!important;padding:0 8px!important;border-radius:999px!important;background:#0a2234!important;border:1px solid #2d6d94!important;color:#aee7ff!important;font-size:10px!important}
+@media(max-width:430px){.autoimport-grid{grid-template-columns:1.15fr .9fr 56px}}
+
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="gauge" aria-hidden="true"></div><div><div class="logo-title">AUTO RACE TIME</div><div class="logo-sub">RACE TIME ANALYZER / DATA MODE</div></div></div></header>
 <main>
+
+<section class="panel autoimport">
+  <div class="autoimport-title">
+    <span>⚡ 出走表 自動入力</span>
+    <span class="autoimport-badge">試験機能</span>
+  </div>
+  <div class="autoimport-grid">
+    <input id="importDate" type="date" aria-label="開催日">
+    <select id="importVenue" aria-label="開催場">
+      <option value="kawaguchi">川口</option>
+      <option value="isesaki">伊勢崎</option>
+      <option value="hamamatsu">浜松</option>
+      <option value="iizuka">飯塚</option>
+      <option value="sanyou">山陽</option>
+    </select>
+    <select id="importRace" aria-label="レース番号">
+      <option value="1">1R</option><option value="2">2R</option><option value="3">3R</option>
+      <option value="4">4R</option><option value="5">5R</option><option value="6">6R</option>
+      <option value="7">7R</option><option value="8">8R</option><option value="9">9R</option>
+      <option value="10">10R</option><option value="11">11R</option><option value="12">12R</option>
+    </select>
+  </div>
+  <div class="autoimport-actions">
+    <button class="autoimport-primary" type="button" onclick="importProgram()">出走表を取得</button>
+    <button class="autoimport-secondary" type="button" onclick="findTodayVenues()">今日の開催を探す</button>
+  </div>
+  <div class="venue-pills" id="venuePills"></div>
+  <div class="autoimport-status" id="importStatus">選手名とハンデを自動入力します。試走・偏差は今まで通り手入力です。</div>
+</section>
+
 
   <section class="panel">
     <div class="race-caption">レース切替（入力内容はレースごとに自動保存）</div>
@@ -244,7 +290,7 @@ input,select{height:36px!important}
   </section>
 
 <div class="help-wrap"><button class="help-btn" type="button" onclick="toggleHelp()" aria-label="計算説明">?</button></div>
-<section class="panel rules help-hidden" id="helpRules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。</section>
+<section class="panel rules help-hidden" id="helpRules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。<br>自動出走表は試験機能で、公式AutoRace.JPの公開出走表を外部Reader経由で読み取ります。取得できない場合は手動選択を使えます。</section>
 <section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ<br>(m)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
 
 <section class="panel player-panel">
@@ -252,13 +298,136 @@ input,select{height:36px!important}
     <span>選手選択</span>
     <span class="hint" id="playerPanelHint">所属→選手 ▼</span>
   </button>
-  <div class="player-grid" id="playerGrid"></div><div style="padding:0 10px 8px;font-size:9px;color:#7890a8">選手は所属→50音順で選択。選手メモはレースをまたいで選手ごとに端末へ保存。</div>
+  <div class="player-grid" id="playerGrid"></div><div style="padding:0 10px 8px;font-size:9px;color:#7890a8">選手マスター：2026/8/22時点407選手。所属→50音順。選手メモは選手ごとに端末保存。</div>
 </section>
 
 <section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ このレースをリセット</button></section>
 <section class="panel rank-card"><div class="rank-title"><span class="trophy">🏆</span>ハンデ込みランキング<span class="rank-note">表示基準：中央値</span></div><div id="rankHeader" class="rank-head" style="display:none"><span>順位</span><span>車番</span><span>ハンデ込み</span><span>差</span></div><div id="ranking" class="empty">入力すると表示されます。</div></section>
 </main>
 <script>
+
+const VENUE_LABEL={kawaguchi:'川口',isesaki:'伊勢崎',hamamatsu:'浜松',iizuka:'飯塚',sanyou:'山陽'};
+const VENUE_LG={kawaguchi:'川口',isesaki:'伊勢崎',hamamatsu:'浜松',iizuka:'飯塚',sanyou:'山陽'};
+
+function localISODate(){
+  const d=new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function officialProgramUrl(venue,date,race){
+  return `https://autorace.jp/race_info/Program/Web/${venue}/${date}_${race}`;
+}
+function readerUrl(url){
+  return 'https://r.jina.ai/'+url;
+}
+function compactJP(s){
+  return String(s||'').replace(/[\s　]/g,'');
+}
+function setImportStatus(msg,type=''){
+  const el=document.getElementById('importStatus');
+  el.textContent=msg; el.className='autoimport-status '+type;
+}
+function allPlayerNames(){
+  const arr=[];
+  Object.entries(PLAYER_MASTER).forEach(([lg,names])=>names.forEach(name=>arr.push({lg,name,key:compactJP(name)})));
+  return arr;
+}
+function parseProgramText(text){
+  const beforeAge = text.split('期/LG/年齢')[0] || text;
+  const compact = compactJP(beforeAge);
+
+  // Find roster names by matching the complete local player master against the roster header area.
+  const hits=[];
+  for(const p of allPlayerNames()){
+    const idx=compact.indexOf(p.key);
+    if(idx>=0) hits.push({...p,idx});
+  }
+  // Same name can only exist once in the master; pick the 8 latest matches nearest to the roster area.
+  hits.sort((a,b)=>a.idx-b.idx);
+  const roster = hits.slice(-8);
+  if(roster.length!==8) throw new Error(`選手名を8人認識できませんでした（${roster.length}人）`);
+
+  // AutoRace web program is laid out columns 8 -> 1.
+  const byCar = roster.slice().reverse();
+
+  // Handicap row is also 8 -> 1.
+  const hMatch = text.match(/(?:^|\n)\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*ハンデ/m);
+  if(!hMatch) throw new Error('ハンデ欄を認識できませんでした');
+  const handicapByCar = hMatch.slice(1).map(Number).reverse();
+
+  return byCar.map((p,i)=>({car:i+1,name:p.name,lg:p.lg,handicap:handicapByCar[i]}));
+}
+function applyProgram(rows){
+  rows.forEach(r=>{
+    const lg=document.getElementById('lg'+r.car);
+    const p=document.getElementById('p'+r.car);
+    const h=document.getElementById('h'+r.car);
+    if(lg){lg.value=r.lg; fillPlayerSelect(r.car,r.name);}
+    if(p && p.value!==r.name){
+      // If master spelling differs, add it safely to this one selector.
+      const opt=document.createElement('option');opt.value=r.name;opt.textContent=r.name;p.appendChild(opt);p.value=r.name;
+    }
+    if(h) h.value=String(r.handicap);
+    if(typeof refreshPlayerMemo==='function') refreshPlayerMemo(r.car);
+  });
+  saveState(); update();
+}
+async function getProgramText(venue,date,race){
+  const url=officialProgramUrl(venue,date,race);
+  const resp=await fetch(readerUrl(url),{cache:'no-store'});
+  if(!resp.ok) throw new Error(`取得エラー ${resp.status}`);
+  const text=await resp.text();
+  if(!text || text.length<200) throw new Error('出走表データが空です');
+  if(text.includes('該当レースの開催は中止')) throw new Error('このレースは中止表示です');
+  return text;
+}
+async function importProgram(){
+  const date=document.getElementById('importDate').value;
+  const venue=document.getElementById('importVenue').value;
+  const race=Number(document.getElementById('importRace').value);
+  if(!date){setImportStatus('日付を選んでください','err');return;}
+  setImportStatus(`${VENUE_LABEL[venue]} ${race}R を取得中…`);
+  try{
+    const text=await getProgramText(venue,date,race);
+    const rows=parseProgramText(text);
+    // Switch app race tab to the imported race number.
+    if(typeof switchRace==='function' && currentRace!==race) switchRace(race);
+    applyProgram(rows);
+    setImportStatus(`${VENUE_LABEL[venue]} ${race}R：選手名・ハンデを自動入力しました。`,'ok');
+  }catch(e){
+    setImportStatus(`取得できませんでした：${e.message}`,'err');
+  }
+}
+async function findTodayVenues(){
+  const date=document.getElementById('importDate').value || localISODate();
+  document.getElementById('importDate').value=date;
+  const holder=document.getElementById('venuePills'); holder.innerHTML='';
+  setImportStatus('開催場を確認中…');
+  const venues=Object.keys(VENUE_LABEL);
+  const found=[];
+  // Check race 1 for each venue. Sequential requests avoid free-reader rate bursts.
+  for(const v of venues){
+    try{
+      const text=await getProgramText(v,date,1);
+      if(text.includes(VENUE_LABEL[v]+'オート第1レース') || text.includes(VENUE_LABEL[v]+'オート')){
+        found.push(v);
+      }
+    }catch(e){}
+  }
+  found.forEach(v=>{
+    const b=document.createElement('button');
+    b.type='button';b.className='venue-pill';b.textContent=VENUE_LABEL[v];
+    b.onclick=()=>{document.getElementById('importVenue').value=v;setImportStatus(`${VENUE_LABEL[v]}を選択しました。レースを選んで「出走表を取得」。`,'ok');};
+    holder.appendChild(b);
+  });
+  setImportStatus(found.length?`開催候補：${found.map(v=>VENUE_LABEL[v]).join('・')}`:'開催場を自動確認できませんでした。',''+(found.length?'ok':'err'));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const d=document.getElementById('importDate'); if(d) d.value=localISODate();
+  const r=document.getElementById('importRace'); if(r) r.value=String(typeof currentRace!=='undefined'?currentRace:1);
+});
+
 const body=document.getElementById('body');
 for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="carbadge car-${i}">${i}</div></td><td><input id="t${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="3.30" aria-label="${i}号車 試走"></td><td><input id="d${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="0.050" aria-label="${i}号車 偏差"></td><td class="up" id="up${i}">---</td><td class="range" id="base${i}">---</td><td><select id="h${i}" aria-label="${i}号車 ハンデ">${Array.from({length:11},(_,n)=>`<option value="${n*10}">${n*10}</option>`).join('')}</select></td><td class="hand-range" id="hand${i}">---</td></tr>`);}
 
@@ -289,7 +458,7 @@ for(let i=1;i<=8;i++){
       </div>
     </div>`);
 }
-const PLAYER_MASTER={"川口": ["上和田 拓海", "中山 光", "中村 雅人", "五十嵐 一夫", "佐藤 励", "佐藤 摩弥", "加賀谷 建明", "吉田 幸司", "君和田 裕二", "大木 光", "山口 航太", "平田 雅崇", "押田 幸夫", "掛川 和人", "柴山 信行", "森 且行", "永井 大介", "泉田 修佑", "石井 大輔", "若井 友和", "菅原 すずの", "阿部 剛士", "黒川 京介"], "浜松": ["伊藤 信夫", "佐藤 貴也", "小林 悠樹", "岡谷 美由紀", "木村 直幸", "栗原 佳祐", "森下 輝", "渡辺 篤", "笠木 美孝", "落合 巧", "赤堀 翼", "遠藤 誠", "金子 大輔", "鈴木 一馬", "鈴木 圭一郎", "鈴木 宏和", "関口 隆広", "青島 正樹"], "飯塚": ["中尾 貴志", "丹村 司", "内山 雄介", "川口 裕司", "新村 嘉之", "水崎 正二", "浜野 翼", "滝下 隼平", "牧瀬 嘉葵", "田島 敏徳", "福岡 鷹", "竹谷 隆", "篠原 睦", "荒尾 聡", "藤川 幸宏", "長田 稚也", "高宗 良次", "高林 亮"], "伊勢崎": ["亀井 政和", "吉原 恭佑", "塚越 浩之", "岩田 行雄", "新井 日和", "早川 清太郎", "松本 康", "浅倉 樹良", "石川 哲也", "西原 智昭", "谷津 圭治", "鈴木 聡太", "青山 周平", "高橋 貢"], "山陽": ["三宅 真央", "且原 朋弥", "丹下 昂紀", "丹村 飛竜", "人見 剛志", "佐々木 啓", "前田 淳", "安東 久隆", "小栗 勝太", "山崎 進", "山本 翔", "岡松 忠", "岩崎 亮一", "日名子 幹正", "松尾 啓史", "松尾 彩", "永島 潤太郎", "池田 康範", "滝谷 圭", "田中 崇太", "矢野 正剛", "磯部 真樹", "稲原 良太郎", "竹中 一成", "藤本 悠仁", "角 翔太郎", "角南 一如"]};
+const PLAYER_MASTER={"川口":["上原 大輝","上和田 拓海","中山 光","中山 透","中村 雅人","中野 憲人","丸山 浩信","九門 結衣","五十嵐 一夫","伊東 玲衣","佐藤 励","佐藤 摩弥","佐藤 裕二","信沢 綾乃","加賀谷 建明","古木 賢","吉田 幸司","君和田 裕二","塚本 浩司","増田 伸一","大木 光","小原 望","小林 瑞季","小椋 華恋","山口 航太","山田 徹","山田 真弘","山田 達也","山際 真介","岡崎 秀二","岩佐 常義","岩田 裕臣","島田 健一","川原 剛","平川 博康","平田 雅崇","広瀬 勝光","影山 伸","押田 幸夫","掛川 和人","斎藤 撤二","早津 康介","早船 歩","木村 悦教","本田 仁恵","染谷 和香","柴山 信行","梅内 幹雄","森 且行","森谷 隼人","武藤 博臣","永井 大介","泉田 修佑","深沢 隆","清水 雄平","渡辺 稔","片野 利沙","牛沢 和彦","牧野 貴博","相馬 康夫","石井 大志","石井 大輔","福村 唯倫","福田 裕二","秋田 貴弘","稲川 聖也","篠崎 実","縫田 雅一","若井 友和","菅原 すずの","落合 春翔","谷島 俊行","運天 諒雅","金子 和裕","鈴木 清","間中 大輔","阿久津 正夫","阿部 剛士","青木 治親","高塚 義明","高橋 祐一","高橋 義弘","高石 光将","黒川 京介"],"浜松":["下平 佳輝","中村 友和","中村 晋典","中野 肇","今田 真輔","仲口 武志","伊藤 信夫","佐藤 大地","佐藤 貴也","北市 唯","吉林 直都","吉田 富重","和田 健吾","坂本 茉奈","城山 英文","宮司 佳奈","小林 悠樹","小林 頼介","山浦 博幸","山脇 孝志","岡谷 美由紀","岩本 君男","岩科 鮮太","岸田 大知","平塚 雅樹","広瀬 豪彦","戸塚 茂","斎藤 努","斎藤 正悟","早津 圭介","木村 武之","木村 直幸","松山 茂靖","柴本 真樹","柴田 健治","柴田 紘志","栗原 佳祐","桝崎 星名","森下 輝","橋本 優一","浅田 真吾","浅野 浩幸","深谷 俊太","渡辺 篤","瀬戸尾 侑宏","片岡 信之","牧野 竜人","田中 竜二","石貝 武之","笠木 美孝","筒井 健太","米里 崇徳","花田 一輝","落合 巧","藤波 直也","西 翔子","西川 頼臣","角貝 拓海","赤堀 翼","辰巳 裕樹","遠藤 誠","野上 史豪","野田 光宏","金子 大輔","鈴木 一馬","鈴木 健吾","鈴木 啓示","鈴木 圭一郎","鈴木 宏和","鈴木 景斗","鈴木 章夫","鈴木 静二","長谷 晴久","関口 隆広","青島 正樹","青嶋 裕治"],"飯塚":["中原 誠","中尾 貴志","中村 杏亮","中村 翔汰","中村 颯斗","丹村 司","久門 徹","井上 智詞","井村 淳一","佐藤 裕児","佳元 光義","内山 雄介","別府 敬剛","北原 岳哲","占部 健太","吉松 優輝","城戸 徹","壷井 亜羅汰","大久保 哲司","室田 泰利","宮地 朗","小林 右京","小里 健太","岩元 毅","岩見 貴史","川口 裕司","帆景 岬","新村 嘉之","木山 優輝","本門 延唯","村瀬 月乃丞","東小野 正道","松尾 学","松尾 隆広","根本 将人","桜木 公和","桝崎 陽介","森本 優佑","水口 寿治","水崎 正二","水本 竜二","浜野 翼","浦 眞知子","浦田 信輔","滝下 隼平","片岡 賢児","牧瀬 嘉葵","田中 正樹","田中 海斗","田中 茂","田中 輝義","田中 進","田島 敏徳","町田 龍駿","石本 圭耶","石橋 啓士","福岡 鷹","秋吉 忠幸","竹中 修二","竹尾 竜星","竹谷 隆","篠原 睦","花元 初美","荒尾 聡","藤井 真弘","藤川 幸宏","藤川 竜","西村 昭紀","越智 尚寿","辻 大樹","道智 亮介","鐘ヶ江 将平","長田 稚也","阿部 仁志","青山 文敏","高宗 良次","高林 亮"],"伊勢崎":["三浦 康平","中村 浩章","中野 光公","亀井 政和","仲田 恵一朗","伊藤 幸人","伊藤 弘幸","伊藤 正真","佐々木 光輝","佐久間 健光","佐藤 智也","保永 高男","内山 高秀","北渡瀬 充","北爪 勝義","千葉 泰将","原田 富夫","吉原 恭佑","吉田 恵輔","塚越 浩之","大月 渉","宍戸 幸雄","小林 晃","小田 雄一朗","山中 充智","岩沼 靖郎","岩田 行雄","廿樂 歩","戸塚 尚起","押田 和也","新井 恵匠","新井 日和","新井 淳","新井 裕貴","早川 清太郎","木村 享平","木村 義明","木部 匡作","松本 康","松本 渉","松村 真","林 稔哲","栗原 俊介","栗原 勝測","桜井 晴光","森村 亮","横田 翔紀","浅倉 樹良","浅香 潤","浜田 樹来","深沢 悟","清岡 優一","清水 卓","渋沢 憲司","渡辺 京二","湯浅 浩","滝沢 健","猪熊 龍太","猿谷 敦史","生方 将人","田中 哲","田中 賢","田崎 萌","田村 治郎","白次 義孝","矢内 昌木","石川 哲也","石川 岳彦","竹内 正浩","竹島 繁夫","竹本 修","笠原 三義","米里 信秀","芝崎 茂信","荒川 哲也","菅野 仁翔","落合 淳","藤本 梨恵","西原 智昭","谷川 一貴","谷津 圭治","野本 佳章","野沢 守弘","金山 周平","鈴木 将光","鈴木 幸治","鈴木 清市","鈴木 聡太","阿部 優美","青山 周平","高橋 絵莉子","高橋 義徳","高橋 貢"],"山陽":["三宅 真央","且原 朋弥","中野 政則","丸山 智史","丹下 昂紀","丹村 飛竜","五所 淳","人見 剛志","佐々木 啓","佐伯 拓実","別府 末彦","前田 淳","原 菊太郎","古城 龍之介","古谷 匠","吉松 憲治","国本 一","安東 久隆","小川 可蓮","小松 俊輔","小栗 勝太","山下 知秀","山崎 進","山本 将之","山本 智大","山本 翔","岡本 信一","岡松 忠","岡部 聡","岩崎 亮一","岩永 清文","斎藤 隆充","日名子 幹正","日室 志郎","春本 綾斗","村田 光希","松井 大和","松尾 亜生理","松尾 啓史","松尾 彩","松生 信二","林 弘明","植村 愛悠斗","永島 潤太郎","池浦 一博","池田 康範","浜野 淳","満村 陽司","滝谷 圭","田中 崇太","田方 秀和","畦坪 孝雄","番田 隆弘","矢野 正剛","石橋 大","石田 啓貴","磯部 真樹","祐定 響","福永 貴史","福田 義久","稲原 良太郎","穴見 和正","竹中 一成","緒方 浩一","藤岡 一樹","藤本 剛","藤本 悠仁","西久保 英幸","西崎 洋一郎","西村 義正","西村 龍太郎","角 翔太郎","角南 一如","重富 英雄","長田 恭徳","青木 隆浩","高木 健太郎"]};
 
 function fillPlayerSelect(i,selected=''){
   const lg=document.getElementById('lg'+i).value;
@@ -404,22 +573,15 @@ function toggleHelp(){
   box.classList.toggle('help-visible');
 }
 
-const DIRECT_PROFILE={
-  "青山 周平":"https://autorace.jp/race_info/Profile/3101",
-  "森 且行":"https://autorace.jp/race_info/Profile/2529"
-};
+const DIRECT_PROFILE={"森 且行":"https://autorace.jp/race_info/Profile/8016","青山 周平":"https://autorace.jp/race_info/Profile/3101","岸田 大知":"https://autorace.jp/race_info/Profile/3904","斎藤 撤二":"https://autorace.jp/race_info/Profile/2511","重富 英雄":"https://autorace.jp/race_info/Profile/2411","若井 友和":"https://autorace.jp/race_info/Profile/2532","小林 悠樹":"https://autorace.jp/race_info/Profile/2808","原 菊太郎":"https://autorace.jp/race_info/Profile/1531","岡谷 美由紀":"https://autorace.jp/race_info/Profile/9003"};
 
 function openOfficialPlayer(i){
   const name=document.getElementById('p'+i).value;
-  if(!name){
-    alert('先に選手を選んでください');
-    return;
-  }
+  if(!name){alert('先に選手を選んでください');return;}
   if(DIRECT_PROFILE[name]){
     window.open(DIRECT_PROFILE[name], '_blank', 'noopener');
     return;
   }
-  // 個別IDを確認済みの選手は公式ページへ直行。その他は公式プロフィールだけを対象に検索。
   const q='site:autorace.jp/race_info/Profile/ "'+name+'選手プロフィール"';
   window.open('https://www.google.com/search?btnI=1&q='+encodeURIComponent(q),'_blank','noopener');
 }
@@ -494,6 +656,7 @@ function switchRace(r){
   if(r===currentRace) return;
   saveState();
   currentRace=r;
+  const ir=document.getElementById('importRace'); if(ir) ir.value=String(r);
   renderRaceTabs();
   loadState();
   update();
