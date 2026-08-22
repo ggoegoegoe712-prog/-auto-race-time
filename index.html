@@ -184,6 +184,54 @@ input,select{height:36px!important}
 .rules.help-hidden{display:none}
 .rules.help-visible{display:block}
 
+
+.player-block{border-bottom:1px solid #10304a}
+.player-block:last-child{border-bottom:0}
+.player-row{border-bottom:0!important}
+.memo-strip{
+  display:flex;align-items:center;gap:6px;
+  padding:0 4px 6px 38px;font-size:10px;color:#8fa9bf;
+}
+.memo-latest{
+  flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#bdd0df;
+}
+.memo-toggle{
+  width:auto!important;height:27px!important;padding:0 8px!important;
+  border-radius:7px!important;border:1px solid #345f7d!important;
+  background:#0a1b29!important;color:#9fe3ff!important;
+  font-size:10px!important;font-weight:900!important;letter-spacing:0!important;
+}
+.memo-detail{
+  display:none;margin:0 5px 7px 38px;padding:7px;
+  border:1px solid #173d59;border-radius:9px;background:#06111b;
+}
+.memo-detail.open{display:block}
+.memo-add-row{display:grid;grid-template-columns:1fr 54px;gap:5px}
+.memo-input{
+  width:100%;height:35px;border:1px solid #315d7b;border-radius:8px;
+  background:#07131f;color:#fff;padding:0 8px;font-size:12px;outline:none;
+}
+.memo-add{
+  height:35px!important;border-radius:8px!important;border:1px solid #2b9cce!important;
+  background:linear-gradient(180deg,#0e72a4,#084b70)!important;
+  color:#fff!important;font-size:11px!important;font-weight:900!important;padding:0!important;
+}
+.memo-list{margin-top:6px;max-height:150px;overflow:auto}
+.memo-item{
+  display:grid;grid-template-columns:1fr 25px;gap:4px;
+  padding:6px 0;border-top:1px solid #123149;
+}
+.memo-text{font-size:11px;color:#e4eef6;line-height:1.35}
+.memo-date{font-size:8px;color:#6f879b;margin-top:2px}
+.memo-del{
+  width:25px!important;height:25px!important;border:0!important;border-radius:6px!important;
+  background:#32131a!important;color:#ff9cae!important;font-size:12px!important;padding:0!important;
+}
+@media(max-width:430px){
+  .memo-strip,.memo-detail{padding-left:0;margin-left:34px}
+}
+
 </style>
 </head>
 <body>
@@ -204,7 +252,7 @@ input,select{height:36px!important}
     <span>選手選択</span>
     <span class="hint" id="playerPanelHint">所属→選手 ▼</span>
   </button>
-  <div class="player-grid" id="playerGrid"></div><div style="padding:0 10px 8px;font-size:9px;color:#7890a8">選手マスター：現行データ確認済みの選手から選択。所属ごとに50音順表示。</div>
+  <div class="player-grid" id="playerGrid"></div><div style="padding:0 10px 8px;font-size:9px;color:#7890a8">選手は所属→50音順で選択。選手メモはレースをまたいで選手ごとに端末へ保存。</div>
 </section>
 
 <section class="panel actions"><button class="primary" type="button" onclick="update()">↻ ランキング更新</button><button class="secondary" type="button" onclick="resetAll()">↻ このレースをリセット</button></section>
@@ -217,14 +265,28 @@ for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="c
 const playerGrid=document.getElementById('playerGrid');
 for(let i=1;i<=8;i++){
   playerGrid.insertAdjacentHTML('beforeend',`
-    <div class="player-row">
-      <div class="player-no car-${i}">${i}</div>
-      <select class="player-lg" id="lg${i}" aria-label="${i}号車 所属">
-        <option value="">所属</option>
-        <option>川口</option><option>伊勢崎</option><option>浜松</option><option>飯塚</option><option>山陽</option>
-      </select>
-      <select class="player-name" id="p${i}" aria-label="${i}号車 選手名"><option value="">選手</option></select>
-      <button class="official-btn" type="button" onclick="openOfficialPlayer(${i})">選手成績</button>
+    <div class="player-block">
+      <div class="player-row">
+        <div class="player-no car-${i}">${i}</div>
+        <select class="player-lg" id="lg${i}" aria-label="${i}号車 所属">
+          <option value="">所属</option>
+          <option>川口</option><option>伊勢崎</option><option>浜松</option><option>飯塚</option><option>山陽</option>
+        </select>
+        <select class="player-name" id="p${i}" aria-label="${i}号車 選手名"><option value="">選手</option></select>
+        <button class="official-btn" type="button" onclick="openOfficialPlayer(${i})">選手成績</button>
+      </div>
+      <div class="memo-strip">
+        <span>最新メモ：</span>
+        <span class="memo-latest" id="latestMemo${i}">選手を選択</span>
+        <button class="memo-toggle" type="button" onclick="toggleMemo(${i})">メモ</button>
+      </div>
+      <div class="memo-detail" id="memoDetail${i}">
+        <div class="memo-add-row">
+          <input class="memo-input" id="memoInput${i}" type="text" autocomplete="off" placeholder="この選手についてメモを追加">
+          <button class="memo-add" type="button" onclick="addPlayerMemo(${i})">追加</button>
+        </div>
+        <div class="memo-list" id="memoList${i}"></div>
+      </div>
     </div>`);
 }
 const PLAYER_MASTER={"川口": ["上和田 拓海", "中山 光", "中村 雅人", "五十嵐 一夫", "佐藤 励", "佐藤 摩弥", "加賀谷 建明", "吉田 幸司", "君和田 裕二", "大木 光", "山口 航太", "平田 雅崇", "押田 幸夫", "掛川 和人", "柴山 信行", "森 且行", "永井 大介", "泉田 修佑", "石井 大輔", "若井 友和", "菅原 すずの", "阿部 剛士", "黒川 京介"], "浜松": ["伊藤 信夫", "佐藤 貴也", "小林 悠樹", "岡谷 美由紀", "木村 直幸", "栗原 佳祐", "森下 輝", "渡辺 篤", "笠木 美孝", "落合 巧", "赤堀 翼", "遠藤 誠", "金子 大輔", "鈴木 一馬", "鈴木 圭一郎", "鈴木 宏和", "関口 隆広", "青島 正樹"], "飯塚": ["中尾 貴志", "丹村 司", "内山 雄介", "川口 裕司", "新村 嘉之", "水崎 正二", "浜野 翼", "滝下 隼平", "牧瀬 嘉葵", "田島 敏徳", "福岡 鷹", "竹谷 隆", "篠原 睦", "荒尾 聡", "藤川 幸宏", "長田 稚也", "高宗 良次", "高林 亮"], "伊勢崎": ["亀井 政和", "吉原 恭佑", "塚越 浩之", "岩田 行雄", "新井 日和", "早川 清太郎", "松本 康", "浅倉 樹良", "石川 哲也", "西原 智昭", "谷津 圭治", "鈴木 聡太", "青山 周平", "高橋 貢"], "山陽": ["三宅 真央", "且原 朋弥", "丹下 昂紀", "丹村 飛竜", "人見 剛志", "佐々木 啓", "前田 淳", "安東 久隆", "小栗 勝太", "山崎 進", "山本 翔", "岡松 忠", "岩崎 亮一", "日名子 幹正", "松尾 啓史", "松尾 彩", "永島 潤太郎", "池田 康範", "滝谷 圭", "田中 崇太", "矢野 正剛", "磯部 真樹", "稲原 良太郎", "竹中 一成", "藤本 悠仁", "角 翔太郎", "角南 一如"]};
@@ -238,12 +300,96 @@ function fillPlayerSelect(i,selected=''){
 }
 
 
+
+const PLAYER_MEMO_PREFIX='autoRaceTime_playerMemo_';
+
+function playerMemoKey(name){
+  return PLAYER_MEMO_PREFIX + encodeURIComponent(name.trim());
+}
+function getPlayerMemos(name){
+  if(!name) return [];
+  try{
+    const raw=localStorage.getItem(playerMemoKey(name));
+    const arr=raw?JSON.parse(raw):[];
+    return Array.isArray(arr)?arr:[];
+  }catch(e){return []}
+}
+function savePlayerMemos(name,items){
+  if(!name) return;
+  try{localStorage.setItem(playerMemoKey(name),JSON.stringify(items));}catch(e){}
+}
+function refreshPlayerMemo(i){
+  const name=document.getElementById('p'+i).value;
+  const latest=document.getElementById('latestMemo'+i);
+  const list=document.getElementById('memoList'+i);
+  const input=document.getElementById('memoInput'+i);
+  if(!name){
+    latest.textContent='選手を選択';
+    list.innerHTML='<div style="font-size:10px;color:#72899d;padding:4px 0">選手を選ぶと、その選手の過去メモが表示されます。</div>';
+    input.disabled=true;
+    input.value='';
+    return;
+  }
+  input.disabled=false;
+  const memos=getPlayerMemos(name);
+  latest.textContent=memos.length?memos[0].text:'なし';
+  if(!memos.length){
+    list.innerHTML='<div style="font-size:10px;color:#72899d;padding:4px 0">まだメモはありません。</div>';
+    return;
+  }
+  list.innerHTML=memos.map((m,idx)=>`
+    <div class="memo-item">
+      <div>
+        <div class="memo-text">${escapeHtml(m.text)}</div>
+        <div class="memo-date">${escapeHtml(m.date||'')}</div>
+      </div>
+      <button class="memo-del" type="button" onclick="deletePlayerMemo(${i},${idx})">×</button>
+    </div>`).join('');
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function toggleMemo(i){
+  const d=document.getElementById('memoDetail'+i);
+  d.classList.toggle('open');
+  refreshPlayerMemo(i);
+}
+function addPlayerMemo(i){
+  const name=document.getElementById('p'+i).value;
+  const input=document.getElementById('memoInput'+i);
+  const text=input.value.trim();
+  if(!name){alert('先に選手を選んでください');return;}
+  if(!text)return;
+  const memos=getPlayerMemos(name);
+  const now=new Date();
+  const date=now.toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  memos.unshift({text,date});
+  savePlayerMemos(name,memos);
+  input.value='';
+  refreshPlayerMemo(i);
+}
+function deletePlayerMemo(i,idx){
+  const name=document.getElementById('p'+i).value;
+  if(!name)return;
+  const memos=getPlayerMemos(name);
+  memos.splice(idx,1);
+  savePlayerMemos(name,memos);
+  refreshPlayerMemo(i);
+}
+
 for(let i=1;i<=8;i++){
   document.getElementById('lg'+i).addEventListener('change',()=>{
     fillPlayerSelect(i);
+    refreshPlayerMemo(i);
     saveState();
   });
-  document.getElementById('p'+i).addEventListener('change',saveState);
+  document.getElementById('p'+i).addEventListener('change',()=>{
+    refreshPlayerMemo(i);
+    saveState();
+  });
+  document.getElementById('memoInput'+i).addEventListener('keydown',(e)=>{
+    if(e.key==='Enter'){e.preventDefault();addPlayerMemo(i);}
+  });
 }
 
 function togglePlayerPanel(){
@@ -260,7 +406,7 @@ function toggleHelp(){
 
 const DIRECT_PROFILE={
   "青山 周平":"https://autorace.jp/race_info/Profile/3101",
-  "森 且行":"https://autorace.jp/race_info/Profile/8016"
+  "森 且行":"https://autorace.jp/race_info/Profile/2529"
 };
 
 function openOfficialPlayer(i){
@@ -273,8 +419,7 @@ function openOfficialPlayer(i){
     window.open(DIRECT_PROFILE[name], '_blank', 'noopener');
     return;
   }
-  // Official profile pages require an individual player code.
-  // Use a first-result lookup restricted to official AutoRace.JP profiles.
+  // 個別IDを確認済みの選手は公式ページへ直行。その他は公式プロフィールだけを対象に検索。
   const q='site:autorace.jp/race_info/Profile/ "'+name+'選手プロフィール"';
   window.open('https://www.google.com/search?btnI=1&q='+encodeURIComponent(q),'_blank','noopener');
 }
@@ -319,13 +464,14 @@ function loadState(){
   clearFormOnly();
   try{
     const raw=localStorage.getItem(storageKey());
-    if(!raw) return;
+    if(!raw){for(let i=1;i<=8;i++)refreshPlayerMemo(i);return;}
     const state=JSON.parse(raw);
     for(let i=1;i<=8;i++){
       if(state['t'+i]!==undefined)document.getElementById('t'+i).value=state['t'+i];
       if(state['d'+i]!==undefined)document.getElementById('d'+i).value=state['d'+i];
       if(state['h'+i]!==undefined)document.getElementById('h'+i).value=state['h'+i];
       fillPlayerSelect(i,state['p'+i]||'');
+      refreshPlayerMemo(i);
       if(state['lg'+i]!==undefined)document.getElementById('lg'+i).value=state['lg'+i];
     }
   }catch(e){}
@@ -359,7 +505,7 @@ document.querySelectorAll('select').forEach(el=>el.addEventListener('change',upd
 
 
 
-function resetAll(){clearFormOnly();try{localStorage.removeItem(storageKey());}catch(e){}update()}renderRaceTabs();loadState();update();
+function resetAll(){clearFormOnly();try{localStorage.removeItem(storageKey());}catch(e){}update()}renderRaceTabs();loadState();for(let i=1;i<=8;i++)refreshPlayerMemo(i);update();
 </script>
 </body>
 </html>
