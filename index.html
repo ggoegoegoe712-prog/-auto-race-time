@@ -111,7 +111,7 @@ select{
 .player-grid{display:none;padding:8px 10px 10px}
 .player-grid.open{display:block}
 .player-row{
-  display:grid;grid-template-columns:34px minmax(92px,.8fr) minmax(140px,1.6fr) 82px;
+  display:grid;grid-template-columns:34px minmax(92px,.8fr) minmax(170px,1.8fr);
   gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #10304a;
 }
 .player-row:last-child{border-bottom:0}
@@ -123,16 +123,11 @@ select{
 .player-name,.player-note{
   height:36px!important;font-size:13px!important;text-align:left!important;padding:0 8px!important;
 }
-.official-btn{
-  height:36px!important;border:1px solid #2c87bc!important;border-radius:8px!important;
-  background:linear-gradient(180deg,#0d5d91,#083b61)!important;
-  color:#eaf8ff!important;font-size:11px!important;font-weight:900!important;
-  letter-spacing:0!important;padding:0 4px!important;
-}
+
 @media(max-width:430px){
   .player-row{grid-template-columns:30px 92px minmax(132px,1fr) 72px;gap:4px}
   .player-name,.player-note{font-size:12px!important;padding:0 6px!important}
-  .official-btn{font-size:10px!important}
+  
 }
 
 
@@ -163,11 +158,11 @@ input,select{height:36px!important}
 .player-summary{height:38px!important;font-size:12px!important;padding:0 11px!important}
 .player-grid{padding:6px 7px 7px!important}
 .player-row{
-  grid-template-columns:30px 76px minmax(145px,1fr) 64px!important;
+  grid-template-columns:30px 82px minmax(170px,1fr)!important;
   gap:4px!important;padding:4px 0!important
 }
 .player-row select{height:34px!important;font-size:11px!important;padding:0 4px!important}
-.player-row .official-btn{height:34px!important;font-size:9px!important}
+.player-row 
 @media(max-width:430px){
   .player-row{min-width:360px!important}
   .player-grid{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
@@ -273,7 +268,6 @@ for(let i=1;i<=8;i++){
           <option>川口</option><option>伊勢崎</option><option>浜松</option><option>飯塚</option><option>山陽</option>
         </select>
         <select class="player-name" id="p${i}" aria-label="${i}号車 選手名"><option value="">選手</option></select>
-        <button class="official-btn" type="button" onclick="openOfficialPlayer(${i})">選手成績</button>
       </div>
       <div class="memo-strip">
         <span>最新メモ：</span>
@@ -406,16 +400,6 @@ function toggleHelp(){
 
 const DIRECT_PROFILE={"森 且行":"https://autorace.jp/race_info/Profile/8016","青山 周平":"https://autorace.jp/race_info/Profile/3101","岸田 大知":"https://autorace.jp/race_info/Profile/3904","斎藤 撤二":"https://autorace.jp/race_info/Profile/2511","重富 英雄":"https://autorace.jp/race_info/Profile/2411","若井 友和":"https://autorace.jp/race_info/Profile/2532","小林 悠樹":"https://autorace.jp/race_info/Profile/2808","原 菊太郎":"https://autorace.jp/race_info/Profile/1531","岡谷 美由紀":"https://autorace.jp/race_info/Profile/9003"};
 
-function openOfficialPlayer(i){
-  const name=document.getElementById('p'+i).value;
-  if(!name){alert('先に選手を選んでください');return;}
-  if(DIRECT_PROFILE[name]){
-    window.open(DIRECT_PROFILE[name], '_blank', 'noopener');
-    return;
-  }
-  const q='site:autorace.jp/race_info/Profile/ "'+name+'選手プロフィール"';
-  window.open('https://www.google.com/search?btnI=1&q='+encodeURIComponent(q),'_blank','noopener');
-}
 
 function normalizeTime(el){const raw=el.value.trim();if(!raw)return null;if(raw.includes('.')){const x=Number(raw);return Number.isFinite(x)?x:null;}const digits=raw.replace(/\D/g,'');if(digits.length===3){el.value=digits[0]+'.'+digits.slice(1);}else if(digits.length===4){el.value=digits[0]+'.'+digits.slice(1,3);}const x=Number(el.value);return Number.isFinite(x)?x:null;}
 function normalizeDev(el){const raw=el.value.trim();if(!raw)return null;if(raw.includes('.')){const x=Number(raw);return Number.isFinite(x)?x:null;}const digits=raw.replace(/\D/g,'');if(digits.length===4){el.value='0.'+digits.slice(1);}else if(digits.length===3){el.value='0.'+digits.padStart(3,'0');}const x=Number(el.value);return Number.isFinite(x)?x:null;}
