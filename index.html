@@ -232,57 +232,11 @@ input,select{height:36px!important}
   .memo-strip,.memo-detail{padding-left:0;margin-left:34px}
 }
 
-
-.autoimport{padding:10px 11px}
-.autoimport-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:950}
-.autoimport-badge{font-size:9px;color:#ffd976;border:1px solid #665324;border-radius:999px;padding:3px 7px}
-.autoimport-grid{display:grid;grid-template-columns:1.25fr 1fr 64px;gap:6px;margin-top:8px}
-.autoimport input,.autoimport select{height:37px!important;font-size:12px!important}
-.autoimport-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
-.autoimport-actions button{height:38px!important;font-size:11px!important}
-.autoimport-primary{background:linear-gradient(180deg,#1685d7,#07528c)!important;border:1px solid #35b7ff!important;color:#fff!important}
-.autoimport-secondary{background:#0a1926!important;border:1px solid #315f80!important;color:#b8d9ee!important}
-.autoimport-status{margin-top:7px;font-size:10px;color:#91a8bc;line-height:1.45}
-.autoimport-status.ok{color:#8fe6b3}.autoimport-status.err{color:#ff9cae}
-.venue-pills{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
-.venue-pill{width:auto!important;height:29px!important;padding:0 8px!important;border-radius:999px!important;background:#0a2234!important;border:1px solid #2d6d94!important;color:#aee7ff!important;font-size:10px!important}
-@media(max-width:430px){.autoimport-grid{grid-template-columns:1.15fr .9fr 56px}}
-
 </style>
 </head>
 <body>
 <header><div class="brand"><div class="gauge" aria-hidden="true"></div><div><div class="logo-title">AUTO RACE TIME</div><div class="logo-sub">RACE TIME ANALYZER / DATA MODE</div></div></div></header>
 <main>
-
-<section class="panel autoimport">
-  <div class="autoimport-title">
-    <span>⚡ 出走表 自動入力</span>
-    <span class="autoimport-badge">試験機能</span>
-  </div>
-  <div class="autoimport-grid">
-    <input id="importDate" type="date" aria-label="開催日">
-    <select id="importVenue" aria-label="開催場">
-      <option value="kawaguchi">川口</option>
-      <option value="isesaki">伊勢崎</option>
-      <option value="hamamatsu">浜松</option>
-      <option value="iizuka">飯塚</option>
-      <option value="sanyou">山陽</option>
-    </select>
-    <select id="importRace" aria-label="レース番号">
-      <option value="1">1R</option><option value="2">2R</option><option value="3">3R</option>
-      <option value="4">4R</option><option value="5">5R</option><option value="6">6R</option>
-      <option value="7">7R</option><option value="8">8R</option><option value="9">9R</option>
-      <option value="10">10R</option><option value="11">11R</option><option value="12">12R</option>
-    </select>
-  </div>
-  <div class="autoimport-actions">
-    <button class="autoimport-primary" type="button" onclick="importProgram()">出走表を取得</button>
-    <button class="autoimport-secondary" type="button" onclick="findTodayVenues()">今日の開催を探す</button>
-  </div>
-  <div class="venue-pills" id="venuePills"></div>
-  <div class="autoimport-status" id="importStatus">選手名とハンデを自動入力します。試走・偏差は今まで通り手入力です。</div>
-</section>
-
 
   <section class="panel">
     <div class="race-caption">レース切替（入力内容はレースごとに自動保存）</div>
@@ -290,7 +244,7 @@ input,select{height:36px!important}
   </section>
 
 <div class="help-wrap"><button class="help-btn" type="button" onclick="toggleHelp()" aria-label="計算説明">?</button></div>
-<section class="panel rules help-hidden" id="helpRules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。<br>自動出走表は試験機能で、公式AutoRace.JPの公開出走表を外部Reader経由で読み取ります。取得できない場合は手動選択を使えます。</section>
+<section class="panel rules help-hidden" id="helpRules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。</section>
 <section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ<br>(m)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
 
 <section class="panel player-panel">
@@ -305,129 +259,6 @@ input,select{height:36px!important}
 <section class="panel rank-card"><div class="rank-title"><span class="trophy">🏆</span>ハンデ込みランキング<span class="rank-note">表示基準：中央値</span></div><div id="rankHeader" class="rank-head" style="display:none"><span>順位</span><span>車番</span><span>ハンデ込み</span><span>差</span></div><div id="ranking" class="empty">入力すると表示されます。</div></section>
 </main>
 <script>
-
-const VENUE_LABEL={kawaguchi:'川口',isesaki:'伊勢崎',hamamatsu:'浜松',iizuka:'飯塚',sanyou:'山陽'};
-const VENUE_LG={kawaguchi:'川口',isesaki:'伊勢崎',hamamatsu:'浜松',iizuka:'飯塚',sanyou:'山陽'};
-
-function localISODate(){
-  const d=new Date();
-  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-function officialProgramUrl(venue,date,race){
-  return `https://autorace.jp/race_info/Program/Web/${venue}/${date}_${race}`;
-}
-function readerUrl(url){
-  return 'https://r.jina.ai/'+url;
-}
-function compactJP(s){
-  return String(s||'').replace(/[\s　]/g,'');
-}
-function setImportStatus(msg,type=''){
-  const el=document.getElementById('importStatus');
-  el.textContent=msg; el.className='autoimport-status '+type;
-}
-function allPlayerNames(){
-  const arr=[];
-  Object.entries(PLAYER_MASTER).forEach(([lg,names])=>names.forEach(name=>arr.push({lg,name,key:compactJP(name)})));
-  return arr;
-}
-function parseProgramText(text){
-  const beforeAge = text.split('期/LG/年齢')[0] || text;
-  const compact = compactJP(beforeAge);
-
-  // Find roster names by matching the complete local player master against the roster header area.
-  const hits=[];
-  for(const p of allPlayerNames()){
-    const idx=compact.indexOf(p.key);
-    if(idx>=0) hits.push({...p,idx});
-  }
-  // Same name can only exist once in the master; pick the 8 latest matches nearest to the roster area.
-  hits.sort((a,b)=>a.idx-b.idx);
-  const roster = hits.slice(-8);
-  if(roster.length!==8) throw new Error(`選手名を8人認識できませんでした（${roster.length}人）`);
-
-  // AutoRace web program is laid out columns 8 -> 1.
-  const byCar = roster.slice().reverse();
-
-  // Handicap row is also 8 -> 1.
-  const hMatch = text.match(/(?:^|\n)\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*(\d{1,3})\s*\|\s*ハンデ/m);
-  if(!hMatch) throw new Error('ハンデ欄を認識できませんでした');
-  const handicapByCar = hMatch.slice(1).map(Number).reverse();
-
-  return byCar.map((p,i)=>({car:i+1,name:p.name,lg:p.lg,handicap:handicapByCar[i]}));
-}
-function applyProgram(rows){
-  rows.forEach(r=>{
-    const lg=document.getElementById('lg'+r.car);
-    const p=document.getElementById('p'+r.car);
-    const h=document.getElementById('h'+r.car);
-    if(lg){lg.value=r.lg; fillPlayerSelect(r.car,r.name);}
-    if(p && p.value!==r.name){
-      // If master spelling differs, add it safely to this one selector.
-      const opt=document.createElement('option');opt.value=r.name;opt.textContent=r.name;p.appendChild(opt);p.value=r.name;
-    }
-    if(h) h.value=String(r.handicap);
-    if(typeof refreshPlayerMemo==='function') refreshPlayerMemo(r.car);
-  });
-  saveState(); update();
-}
-async function getProgramText(venue,date,race){
-  const url=officialProgramUrl(venue,date,race);
-  const resp=await fetch(readerUrl(url),{cache:'no-store'});
-  if(!resp.ok) throw new Error(`取得エラー ${resp.status}`);
-  const text=await resp.text();
-  if(!text || text.length<200) throw new Error('出走表データが空です');
-  if(text.includes('該当レースの開催は中止')) throw new Error('このレースは中止表示です');
-  return text;
-}
-async function importProgram(){
-  const date=document.getElementById('importDate').value;
-  const venue=document.getElementById('importVenue').value;
-  const race=Number(document.getElementById('importRace').value);
-  if(!date){setImportStatus('日付を選んでください','err');return;}
-  setImportStatus(`${VENUE_LABEL[venue]} ${race}R を取得中…`);
-  try{
-    const text=await getProgramText(venue,date,race);
-    const rows=parseProgramText(text);
-    // Switch app race tab to the imported race number.
-    if(typeof switchRace==='function' && currentRace!==race) switchRace(race);
-    applyProgram(rows);
-    setImportStatus(`${VENUE_LABEL[venue]} ${race}R：選手名・ハンデを自動入力しました。`,'ok');
-  }catch(e){
-    setImportStatus(`取得できませんでした：${e.message}`,'err');
-  }
-}
-async function findTodayVenues(){
-  const date=document.getElementById('importDate').value || localISODate();
-  document.getElementById('importDate').value=date;
-  const holder=document.getElementById('venuePills'); holder.innerHTML='';
-  setImportStatus('開催場を確認中…');
-  const venues=Object.keys(VENUE_LABEL);
-  const found=[];
-  // Check race 1 for each venue. Sequential requests avoid free-reader rate bursts.
-  for(const v of venues){
-    try{
-      const text=await getProgramText(v,date,1);
-      if(text.includes(VENUE_LABEL[v]+'オート第1レース') || text.includes(VENUE_LABEL[v]+'オート')){
-        found.push(v);
-      }
-    }catch(e){}
-  }
-  found.forEach(v=>{
-    const b=document.createElement('button');
-    b.type='button';b.className='venue-pill';b.textContent=VENUE_LABEL[v];
-    b.onclick=()=>{document.getElementById('importVenue').value=v;setImportStatus(`${VENUE_LABEL[v]}を選択しました。レースを選んで「出走表を取得」。`,'ok');};
-    holder.appendChild(b);
-  });
-  setImportStatus(found.length?`開催候補：${found.map(v=>VENUE_LABEL[v]).join('・')}`:'開催場を自動確認できませんでした。',''+(found.length?'ok':'err'));
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const d=document.getElementById('importDate'); if(d) d.value=localISODate();
-  const r=document.getElementById('importRace'); if(r) r.value=String(typeof currentRace!=='undefined'?currentRace:1);
-});
-
 const body=document.getElementById('body');
 for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="carbadge car-${i}">${i}</div></td><td><input id="t${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="3.30" aria-label="${i}号車 試走"></td><td><input id="d${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="0.050" aria-label="${i}号車 偏差"></td><td class="up" id="up${i}">---</td><td class="range" id="base${i}">---</td><td><select id="h${i}" aria-label="${i}号車 ハンデ">${Array.from({length:11},(_,n)=>`<option value="${n*10}">${n*10}</option>`).join('')}</select></td><td class="hand-range" id="hand${i}">---</td></tr>`);}
 
@@ -656,7 +487,6 @@ function switchRace(r){
   if(r===currentRace) return;
   saveState();
   currentRace=r;
-  const ir=document.getElementById('importRace'); if(ir) ir.value=String(r);
   renderRaceTabs();
   loadState();
   update();
