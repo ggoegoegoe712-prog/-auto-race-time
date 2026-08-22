@@ -238,6 +238,16 @@ input, select, textarea {
   font-size:16px !important;
 }
 
+
+/* 列順調整：ハンデを偏差の横へ */
+th:nth-child(1){width:8%!important}
+th:nth-child(2){width:15%!important}
+th:nth-child(3){width:15%!important}
+th:nth-child(4){width:12%!important}
+th:nth-child(5){width:18%!important}
+th:nth-child(6){width:21%!important}
+th:nth-child(7){width:20%!important}
+
 </style>
 </head>
 <body>
@@ -251,7 +261,7 @@ input, select, textarea {
 
 <div class="help-wrap"><button class="help-btn" type="button" onclick="toggleHelp()" aria-label="計算説明">?</button></div>
 <section class="panel rules help-hidden" id="helpRules"><b>計算：</b> 上がり想定＝試走＋偏差。上がり想定幅＝上がり想定±0.010秒。<br>試走は <strong>「334→3.34」</strong>、偏差は <strong>「0063→0.063」</strong> に自動変換。<br>ハンデ込み＝上がり想定幅＋ハンデ（10m＝0.010秒）。</section>
-<section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ<br>(m)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
+<section class="panel table-shell"><table><thead><tr><th>車</th><th>試走<br>(秒)</th><th>偏差<br>(秒)</th><th>ハンデ<br>(m)</th><th>上がり想定<br>(秒)</th><th>上がり想定幅<br>(秒)</th><th>ハンデ込み<br>(秒)</th></tr></thead><tbody id="body"></tbody></table></section>
 
 <section class="panel player-panel">
   <button class="player-summary" type="button" onclick="togglePlayerPanel()">
@@ -266,7 +276,7 @@ input, select, textarea {
 </main>
 <script>
 const body=document.getElementById('body');
-for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="carbadge car-${i}">${i}</div></td><td><input id="t${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="3.30" aria-label="${i}号車 試走"></td><td><input id="d${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="0.050" aria-label="${i}号車 偏差"></td><td class="up" id="up${i}">---</td><td class="range" id="base${i}">---</td><td><select id="h${i}" aria-label="${i}号車 ハンデ">${Array.from({length:11},(_,n)=>`<option value="${n*10}">${n*10}</option>`).join('')}</select></td><td class="hand-range" id="hand${i}">---</td></tr>`);}
+for(let i=1;i<=8;i++){body.insertAdjacentHTML('beforeend',`<tr><td><div class="carbadge car-${i}">${i}</div></td><td><input id="t${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="3.30" aria-label="${i}号車 試走"></td><td><input id="d${i}" type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="0.050" aria-label="${i}号車 偏差"></td><td><select id="h${i}" aria-label="${i}号車 ハンデ">${Array.from({length:11},(_,n)=>`<option value="${n*10}">${n*10}</option>`).join('')}</select></td><td class="up" id="up${i}">---</td><td class="range" id="base${i}">---</td><td class="hand-range" id="hand${i}">---</td></tr>`);}
 
 const playerGrid=document.getElementById('playerGrid');
 for(let i=1;i<=8;i++){
